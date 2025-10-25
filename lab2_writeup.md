@@ -9,7 +9,7 @@ In this lab, I completed two main tasks with the assistance of GitHub Copilot:
 ## Step 1: External Database Migration
 
 ### 1. Adding Required Dependencies
-Updated `requirements.txt` with the following packages:
+Updated `requirements.txt` with the following packages and install new packages for supporting supabase:
 - `supabase==2.3.4`: Supabase Python client
 - `psycopg2-binary==2.9.9`: PostgreSQL adapter
 - `python-dotenv==1.0.0`: Environment variable management
@@ -26,11 +26,14 @@ Created `src/config.py` file to implement:
 - Ensured secure credential management
 
 ### 4. Environment Variable Configuration
-Created `.env.example` template file, including:
+Created `.env.example` template file and replace them with variables in .env, including:
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 - `DATABASE_URL`
 - `GITHUB_TOKEN`
+
+![env](screenshots/env-file.png)
+
 
 ## Step 2: Vercel Deployment Support
 
@@ -38,6 +41,8 @@ Created `.env.example` template file, including:
 - Removed SQLite-related configurations
 - Updated database initialization logic
 - Ensured file path compatibility
+
+![SQLite-to-supabase](screenshots/SQLite-to-supabase.png)
 
 ### 2. Vercel Configuration
 Created `vercel.json` file, defining:
@@ -50,8 +55,8 @@ Created `vercel.json` file, defining:
 - Ensured consistency between local development and production environments
 - Implemented secure key management
 
-![Environment variables configuration interface showing Vercel project settings panel with secrets management section, displaying multiple environment variable entries including database credentials and API tokens](screenshots/Environment Variable Management.png)
-<image-card alt="Environment variables configuration" src="screenshots/Environment Variable Management.png" ></image-card>
+![Environment variables configuration in Vercel](screenshots/environment-variable-management.png)
+
 
 ## Learning Outcomes
 

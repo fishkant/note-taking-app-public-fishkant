@@ -50,7 +50,8 @@ Created `vercel.json` file, defining:
 - Ensured consistency between local development and production environments
 - Implemented secure key management
 
-![Alt text](/workspaces/note-taking-app-public-fishkant/screenshots/Environment Variable Management.png)
+![Environment variables configuration interface showing Vercel project settings panel with secrets management section, displaying multiple environment variable entries including database credentials and API tokens](screenshots/Environment Variable Management.png)
+<image-card alt="Environment variables configuration" src="screenshots/Environment Variable Management.png" ></image-card>
 
 ## Learning Outcomes
 

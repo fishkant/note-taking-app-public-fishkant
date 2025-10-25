@@ -4,7 +4,7 @@
 A modern, responsive web application for managing personal notes with a beautiful user interface and full CRUD functionality.
 
 ## 🌟 Features
-test123
+
 - **Create Notes**: Add new notes with titles and rich content
 - **Edit Notes**: Update existing notes with real-time editing
 - **Delete Notes**: Remove notes you no longer need

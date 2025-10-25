@@ -50,6 +50,8 @@ Created `vercel.json` file, defining:
 - Ensured consistency between local development and production environments
 - Implemented secure key management
 
+![Alt text](/workspaces/note-taking-app-public-fishkant/screenshots/Environment Variable Management.png)
+
 ## Learning Outcomes
 
 1. **Database Migration Experience**

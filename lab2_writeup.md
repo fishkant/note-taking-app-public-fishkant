@@ -32,7 +32,7 @@ Created `.env.example` template file and replace them with variables in .env, in
 - `DATABASE_URL`
 - `GITHUB_TOKEN`
 
-![env](screenshots/env-file.png)
+![env](screenshots/env-files.png)
 
 
 ## Step 2: Vercel Deployment Support

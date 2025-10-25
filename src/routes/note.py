@@ -3,6 +3,15 @@ from src.models.note import Note, db
 
 note_bp = Blueprint('note', __name__)
 
+#An endpoint to return the number of notes
+@note_bp.route('/notes/count', methods=['GET']) 
+def get_notes_count():
+    """Get the total count of notes"""
+    count = Note.query.count()
+    return jsonify({'count': count})   
+
+
+
 @note_bp.route('/notes', methods=['GET'])
 def get_notes():
     """Get all notes, ordered by most recently updated"""
@@ -114,4 +123,42 @@ def search_notes():
     ).order_by(Note.updated_at.desc()).all()
     
     return jsonify([note.to_dict() for note in notes])
+
+
+# Translation endpoint: POST /api/notes/<id>/translate
+@note_bp.route('/notes/<int:note_id>/translate', methods=['POST'])
+def translate_note(note_id):
+    """Translate a note's title and content to a target language (ephemeral, no DB change)"""
+    note = Note.query.get_or_404(note_id)
+    data = request.json or {}
+    target_language = data.get('target_language')
+    if not target_language:
+        return jsonify({'error': 'target_language required'}), 400
+    from src.llm import translate_to_language
+    try:
+        translated_title = translate_to_language(note.title, target_language)
+        translated_content = translate_to_language(note.content, target_language)
+        return jsonify({
+            'note_id': note.id,
+            'target_language': target_language,
+            'translated_title': translated_title,
+            'translated_content': translated_content
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@note_bp.route('/notes/generate', methods=['POST'])
+def generate_note():
+    """Generate a note using AI from natural language input"""
+    try:
+        data = request.json
+        if not data or 'input_text' not in data:
+            return jsonify({'error': 'Input text is required'}), 400
+        
+        from src.llm import generate_note_from_text
+        generated = generate_note_from_text(data['input_text'])
+        
+        return jsonify(generated), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 

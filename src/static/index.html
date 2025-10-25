@@ -48,8 +48,24 @@
         .main-content {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            flex: 1;
+        }
+
+        .language-select {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-right: 10px;
+            background-color: white;
+        }
+
+        .btn-translate {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn-translate:hover {
+            background: #357abd;
+            transform: translateY(-1px);
         }
 
         .sidebar {
@@ -103,6 +119,38 @@
         .new-note-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .ai-note-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .ai-note-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 198, 251, 0.4);
+        }
+
+        .ai-input-form {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e1e5e9;
+        }
+
+        .ai-input-form.show {
+            display: block;
         }
 
         .notes-list {
@@ -334,6 +382,27 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
+                <button class="ai-note-btn" id="aiNoteBtn">🤖 Generate Note with AI</button>
+                
+                                <div id="aiInputForm" class="ai-input-form">
+                    <div class="form-group">
+                        <label class="form-label">Describe Your Note</label>
+                        <div style="margin-bottom: 8px; font-size: 14px; color: #666;">
+                            <p>You can use natural time expressions like:</p>
+                            <ul style="margin-left: 20px; margin-bottom: 8px;">
+                                <li>"today", "tomorrow", "next Monday"</li>
+                                <li>"now", "in 2 hours", "at 3 PM"</li>
+                            </ul>
+                        </div>
+                        <textarea class="form-textarea" id="aiInput" 
+                            placeholder="Example: Schedule a team meeting today at 3 PM to discuss the new project roadmap...&#10;&#10;Or: Write notes about the client meeting scheduled for next Monday at 10 AM..."
+                            style="min-height: 120px;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                        <button class="btn" onclick="noteTaker.cancelAIGenerate()" style="background: #6c757d;">Cancel</button>
+                        <button class="btn" onclick="noteTaker.confirmAIGenerate()" style="background: #28a745;">Generate Note</button>
+                    </div>
+                </div>
                 
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
@@ -344,6 +413,10 @@
                 <div class="editor-header">
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
                     <div class="editor-actions" id="editorActions" style="display: none;">
+                        <select class="language-select" id="targetLanguage">
+                            <option value="Chinese">Chinese</option>
+                        </select>
+                        <button class="btn btn-translate" id="translateBtn">🌐 Translate</button>
                         <button class="btn btn-save" id="saveBtn">💾 Save</button>
                         <button class="btn btn-delete" id="deleteBtn">🗑️ Delete</button>
                     </div>
@@ -402,9 +475,11 @@
 
             bindEvents() {
                 document.getElementById('newNoteBtn').addEventListener('click', () => this.createNewNote());
+                document.getElementById('aiNoteBtn').addEventListener('click', () => this.generateNoteWithAI());
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                document.getElementById('translateBtn').addEventListener('click', () => this.translateNote());
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -620,6 +695,107 @@
                     this.showMessage('Note deleted successfully!', 'success');
                 } catch (error) {
                     this.showMessage(`Error deleting note: ${error.message}`, 'error');
+                }
+            }
+
+            generateNoteWithAI() {
+                // 顯示AI輸入表單
+                document.getElementById('aiInputForm').classList.add('show');
+                document.getElementById('aiInput').focus();
+            }
+
+            cancelAIGenerate() {
+                // 隱藏AI輸入表單
+                document.getElementById('aiInputForm').classList.remove('show');
+                document.getElementById('aiInput').value = '';
+            }
+
+            async confirmAIGenerate() {
+                const input = document.getElementById('aiInput').value.trim();
+                if (!input) {
+                    this.showMessage('Please enter a description', 'error');
+                    return;
+                }
+
+                this.showMessage('Generating note...', 'loading');
+                document.getElementById('aiInputForm').classList.remove('show');
+
+                try {
+                    const response = await fetch('/api/notes/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ input_text: input })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to generate note');
+                    }
+
+                    const generatedNote = await response.json();
+                    
+                    // Create new note and fill in generated content
+                    this.createNewNote();
+                    document.getElementById('noteTitle').value = generatedNote.title;
+                    document.getElementById('noteContent').value = generatedNote.content;
+                    document.getElementById('noteTags').value = generatedNote.tags.join(', ');
+                    
+                    // Fill in date and time fields if detected
+                    if (generatedNote.event_date) {
+                        document.getElementById('eventDate').value = generatedNote.event_date;
+                    }
+                    if (generatedNote.event_time) {
+                        document.getElementById('eventTime').value = generatedNote.event_time;
+                    }
+                    
+                    document.getElementById('aiInput').value = '';
+                    
+                    const dateTimeMsg = [];
+                    if (generatedNote.event_date) dateTimeMsg.push(`Date: ${generatedNote.event_date}`);
+                    if (generatedNote.event_time) dateTimeMsg.push(`Time: ${generatedNote.event_time}`);
+                    
+                    const successMsg = 'AI has generated the note' + 
+                        (dateTimeMsg.length > 0 ? ` and extracted ${dateTimeMsg.join(', ')}` : '') +
+                        '. Please review and save!';
+                    
+                    this.showMessage(successMsg, 'success');
+                } catch (error) {
+                    this.showMessage(`Error generating note: ${error.message}`, 'error');
+                }
+            }
+
+            async translateNote() {
+                if (!this.currentNote || !this.currentNote.id) {
+                    this.showMessage('Please select a note to translate', 'error');
+                    return;
+                }
+
+                try {
+                    const targetLanguage = document.getElementById('targetLanguage').value;
+                    const response = await fetch(`/api/notes/${this.currentNote.id}/translate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            target_language: targetLanguage
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Translation failed');
+                    }
+
+                    const data = await response.json();
+                    
+                    // Update editor content with translation results
+                    document.getElementById('noteTitle').value = data.translated_title;
+                    document.getElementById('noteContent').value = data.translated_content;
+                    
+                    this.showMessage('Translation completed!', 'success');
+                } catch (error) {
+                    this.showMessage(`Translation error: ${error.message}`, 'error');
                 }
             }
 
